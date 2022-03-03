@@ -9,7 +9,8 @@
 </head>
 
 <body>
-
+    <p id="minVal"></p>
+    <p id="maxVal"></p>
     <svg id="my_dataviz" width="1000" height="600"></svg>
 
 </body>
@@ -45,19 +46,36 @@
 
     // Data and color scale
     var data = d3.map();
-    var colorScale = d3.scaleThreshold()
-        .domain([100000, 1000000, 10000000, 30000000, 100000000, 500000000])
-        .range(d3.schemeBlues[7]);
 
+    var maxVal = 0
+    var minVal = 10000
+    var vals = []
     // Load external data and boot
     d3.queue()
         .defer(d3.json, "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
-        .defer(d3.csv, "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_population.csv",
-            function (d, i) { if (selectedRow.includes(i)) { data.set(d.code, +d.pop); } })
+        .defer(d3.csv, "https://raw.githubusercontent.com/YufeiLinUlysses/a3-experiment/main/netflix_code.csv",
+            function (d, i) {
+                if (selectedRow.includes(i)) {
+                    tmp = d["Cost Per Month - Standard ($)"]
+                    console.log(tmp)
+                    vals.push(Number(tmp))
+                    data.set(d.code, tmp);
+                }
+            })
         .await(ready);
 
-    function ready(error, topo) {
 
+    function ready(error, topo) {
+        console.log(vals)
+        maxVal = Math.max.apply(null, vals);
+        minVal = Math.min.apply(null, vals);
+        var maxColor = maxVal + 10
+        var interval = maxColor / 6
+        var colorScale = d3.scaleThreshold()
+            .domain([interval, interval * 2, interval * 3, interval * 4, interval * 5, maxColor])
+            .range(d3.schemeBlues[7]);
+        document.getElementById("minVal").innerHTML = "Min Value: " + String(minVal);
+        document.getElementById("maxVal").innerHTML = "Max Value: " + String(maxVal);
         // Draw the map
         svg.append("g")
             .selectAll("path")

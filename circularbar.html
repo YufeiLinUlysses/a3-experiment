@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CS573 Data Visualization - A3 Experiment - Bar Chart</title>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <!-- Function for radial charts -->
+	  <script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3-scale-radial.js"></script>
+
+</head>
+
+<body>
+  <div class="div header">
+    <h2>CS573 Data Visualization</h2>
+  </div>
+  <div class="div" id="experiment">
+      <p id="question-text">Can you guess what is the average subscription fee per month?</p>
+      <p>Can you guess what is the average subscription fee per month?</p>
+      <p>The minimum and maximum subscription fee are marked, input a number as your guess.</p>
+      <div class="vis" id="vis"></div>
+  </div>
+</body>
+
+<script>
+  console.log(d3); // test if d3 is loaded
+
+	// load data
+	var countrys = new Array()
+	var fees = new Array()
+	let average = ""  
+	
+  d3.csv("https://raw.githubusercontent.com/YufeiLinUlysses/a3-experiment/main/netflix_code.csv",function(error,csvdata){ 
+	
+    if(error){ 
+      console.log(error); 
+     } 
+     console.log(csvdata); 
+    
+    // get the useful data
+    
+    for( var i=0; i<csvdata.length; i++ ){ 
+      // country
+      var country = csvdata[i].Country; 
+      countrys[i] = country
+      // fee per month
+         var fee = csvdata[i].Basic; 
+      fees[i] = fee
+      
+         console.log( "Country: " + countrys[i] + "\n" + 
+             "Fee: " + fees[i] ); 
+      } 
+    console.log( "length: " + countrys.length );
+
+    data = getData()
+    createCircularBarChart(data)
+    
+    document.getElementById('question-text').innerHTML = "The maximum fee: " + data.maxcountry + " - " + data.maxfee + " $. " + "The minimum fee: " + data.mincountry + " - " + data.minfee + " $."
+  
+
+});
+
+    function getData() {
+      	
+		// randomly choose 10 data
+    let count = 10
+		let length = countrys.length
+
+		var number = new Array()
+		var countryData = new Array()
+		var feeData = new Array()
+		let average = ""
+    console.log( "length: " + countrys.length );
+
+		var number = [];
+    for(var i=0;i<10;i++){
+        getx(number);
+    }
+    
+    function getx(number){
+        for(var i=0;i>-1;i++){
+            var flag = true;
+            var num = Math.floor(Math.random()*length);
+            for(var i in number){
+                if(number[i] == num){
+                    flag= false;
+                    break;
+                }
+            }
+            if(flag == true){
+                console.log(num);
+                number.push(num);
+                return;
+            }
+        }
+    }
+    console.log( "number[]: " + number );
+
+		for (var i=0; i<number.length; i++){
+			countryData[i] = countrys[number[i]]
+			//console.log("countryData[i]: " + countryData[i]);
+			feeData[i] = Number(fees[number[i]])
+		}
+
+		// min and max
+		var max = Math.max.apply(null, feeData);
+		var min = Math.min.apply(null, feeData);
+		
+		//console.log("typeof(max): " + typeof(max)+ " typeof(feeDate): " + typeof(feeData[3]));
+
+		Array.prototype.getArrayIndex = function(obj){
+        	for(var i=0;i<this.length;i++){
+				if(this[i]===obj){
+					return i;
+        	  	}
+        	}
+        	return -1;
+        }
+
+		var maxIndex = feeData.getArrayIndex(max)
+		var minIndex = feeData.getArrayIndex(min)
+
+		
+		//
+		console.log("max: " + max + " min: " + min);
+	  console.log("maxIndex: " + maxIndex + " minIndex: " + minIndex);
+		console.log("maxbyid: " + feeData[maxIndex] + " minbyid: " + feeData[minIndex]);
+
+		var maxCountry = countryData[maxIndex]
+		var minCountry = countryData[minIndex]
+		console.log("maxCountry: " + countrys[maxIndex] + " minCountry: " + countrys[minIndex]);
+		
+		var myData = [
+          {country: countryData[0], fee: feeData[0]},
+          {country: countryData[1], fee: feeData[1]},
+          {country: countryData[2], fee: feeData[2]},
+          {country: countryData[3], fee: feeData[3]},
+          {country: countryData[4], fee: feeData[4]},
+          {country: countryData[5], fee: feeData[5]},
+          {country: countryData[6], fee: feeData[6]},
+          {country: countryData[7], fee: feeData[7]},
+          {country: countryData[8], fee: feeData[8]},
+          {country: countryData[9], fee: feeData[9]}
+      	];
+
+      	//create struct
+    var data = {
+        minfee: min,
+        maxfee: max,
+		    mincountry: minCountry,
+		    maxcountry: maxCountry,
+        dataset: myData
+        };
+      	return data;
+    }
+//
+    //let data1 = generateDataset();
+    //console.log("mark1: " + data1.mark1 + " mark2: " + data1.mark2 + " dataset: " + data1.dataset);
+    
+    // Circular bar chart
+	  // https://www.d3-graph-gallery.com/graph/circular_barplot_basic.html
+
+    function createCircularBarChart(data) {
+
+        var margin = { top: 30, right: 30, bottom: 30, left: 60 },
+        width = 430 - margin.left - margin.right,
+        height = 460 - margin.top - margin.bottom,
+        innerRadius = 50,
+        outerRadius = Math.min(width, height) / 2;
+
+		var svg = d3.select("div#vis")
+  			.append("svg")
+			  //.attr("preserveAspectRatio", "xMidYMid meet")
+              //.attr("viewBox", "0 0 400 400")
+  			  .attr("width", width*3 + margin.left + margin.right)
+  			  .attr("height", height + margin.top + margin.bottom)
+  			.append("g")
+  			  .attr("transform", "translate(" + width / 2 + "," + ( height/2 )+ ")"); // Add 100 on Y translation, cause upper bars are longer
+
+		var d = data.dataset,
+    	minfee = data.minfee,
+    	maxfee = data.maxfee;
+	
+		console.log(data);
+      	console.log(d);
+
+        // x Scales
+        var x = d3.scaleBand()
+            .range([0, 2 * Math.PI])
+			.align(0)
+            .domain(d.map(function(d) { return d.country; })); 
+		
+		// y Scales
+        var y = d3.scaleRadial()
+            .range([innerRadius, outerRadius])
+            .domain([0, maxfee+0.5]); 
+
+        // Add bars
+        svg.append("g")
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+        .selectAll("path")
+        .data(data.dataset)
+        .enter()
+        .append("path")
+			.attr("stroke", "black")
+            .attr("fill", "none")
+            .attr("d", d3.arc()     
+                .innerRadius(innerRadius)
+                .outerRadius(function(d) {
+                    console.log(d);
+                    return y(d['fee']); })
+                .startAngle(function(d) { return x(d.country); })
+                .endAngle(function(d) { return x(d.country) + x.bandwidth(); })
+                .padAngle(0.01)
+                .padRadius(innerRadius))
+
+        // Add the labels
+        svg.append("g")
+            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+            .selectAll("g")
+            .data(data.dataset)
+            .enter()
+            .append("g")
+            .attr("text-anchor", function(d) { return (x(d.country) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? "end" : "start"; })
+            .attr("transform", function(d) { return "rotate(" + ((x(d.country) + x.bandwidth() / 2) * 180 / Math.PI - 90) + ")"+"translate(" + (y(d['fee'])+10) + ",0)"; })
+            .append("text")
+            .text(function(d){return(d.country)})
+            .attr("transform", function(d) { return (x(d.country) + x.bandwidth() / 2 + Math.PI) % (2 * Math.PI) < Math.PI ? "rotate(180)" : "rotate(0)"; })
+            .style("font-size", "13px")
+            .attr("alignment-baseline", "middle")
+    }
+    
+
+</script>
+</html>

@@ -23,7 +23,7 @@
                 <input type="range" id="avg" class="form-range" min="0" max="90" step="0.01" value="10"
                     style="width:300px;" oninput="chosen.value = this.value">
                 <output name="ageOutputName" id="chosen">24</output>
-                <button onclick="submitValue()">Submit</button>
+                <input type="submit" onclick="submitValue()">
             </div>
         </div>
         <div class="row">
@@ -130,7 +130,7 @@
                 return colorScale(d.total);
             });
     }
-    
+
     function submitValue() {
         const scriptURL = 'https://script.google.com/macros/s/AKfycbwMk_xPRvgXOQUUdK7-vDvtUaUhQwcICm2g3cUcB-7Myt2GYR-X_-pI48hvJZTFIoQDRg/exec'
         const form = new FormData()

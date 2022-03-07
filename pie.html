@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CS573 Data Visualization - A3 Experiment - Bar Chart</title>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/random-color-array-generator@1.0.3/ColorGeneratorCDN.min.js"></script>
+    
+</head>
+
+<body>
+  <div class="div header">
+    <h2>CS573 Data Visualization</h2>
+  </div>
+  <div class="div" id="experiment">
+      <p id="question-text">Can you guess what is the average subscription fee per month?</p>
+      <p>Can you guess what is the average subscription fee per month?</p>
+      <p>The minimum and maximum subscription fee are marked, input a number as your guess.</p>
+      <div class="vis" id="vis"></div>
+  </div>
+</body>
+
+<script>
+  console.log(d3); // test if d3 is loaded
+
+	// load data
+	var countrys = new Array()
+	var fees = new Array()
+	let average = ""  
+	
+  d3.csv("https://raw.githubusercontent.com/YufeiLinUlysses/a3-experiment/main/netflix_code.csv",function(error,csvdata){ 
+	
+    if(error){ 
+      console.log(error); 
+     } 
+     console.log(csvdata); 
+    
+    // get the useful data
+    
+    for( var i=0; i<csvdata.length; i++ ){ 
+      // country
+      var country = csvdata[i].Country; 
+      countrys[i] = country
+      // fee per month
+         var fee = csvdata[i]["Cost Per Month - Standard ($)"]; 
+      fees[i] = fee
+      
+         console.log( "Country: " + countrys[i] + "\n" + 
+             "Fee: " + fees[i] ); 
+      } 
+    console.log( "length: " + countrys.length );
+
+    data = getData()
+    createPie(data)
+    //console.log("data3:", data)
+
+    
+    document.getElementById('question-text').innerHTML = "The maximum fee: " + data.maxcountry + " - " + data.maxfee + " $. " + "The minimum fee: " + data.mincountry + " - " + data.minfee + " $."
+  
+
+});
+
+    function getData() {
+      	
+		var actualAvg = null
+		// randomly choose 10 data
+    let count = 10
+		let length = countrys.length
+
+		var number = new Array()
+		var countryData = new Array()
+		var feeData = new Array()
+		let average = ""
+
+		var number = [];
+        for(var i=0;i<10;i++){
+            getx(number);
+        }
+
+        function getx(number){
+            for(var i=0;i>-1;i++){
+                var flag = true;
+                var num = Math.floor(Math.random()*length);
+                for(var i in number){
+                    if(number[i] == num){
+                        flag= false;
+                        break;
+                    }
+                }
+                if(flag == true){
+                    console.log(num);
+                    number.push(num);
+                    return;
+                }
+            }
+        }
+
+		for (var i=0; i<number.length; i++){
+			countryData[i] = countrys[number[i]]
+			//console.log("countryData[i]: " + countryData[i]);
+			feeData[i] = Number(fees[number[i]])
+		}
+
+		// min and max
+		var max = Math.max.apply(null, feeData);
+		var min = Math.min.apply(null, feeData);
+		
+		//console.log("typeof(max): " + typeof(max)+ " typeof(feeDate): " + typeof(feeData[3]));
+
+		Array.prototype.getArrayIndex = function(obj){
+        	for(var i=0;i<this.length;i++){
+				if(this[i]===obj){
+					return i;
+        	  	}
+        	}
+        	return -1;
+        }
+
+		var maxIndex = feeData.getArrayIndex(max)
+		var minIndex = feeData.getArrayIndex(min)
+
+		
+		//
+		console.log("max: " + max + " min: " + min);
+	    console.log("maxIndex: " + maxIndex + " minIndex: " + minIndex);
+		console.log("maxbyid: " + feeData[maxIndex] + " minbyid: " + feeData[minIndex]);
+
+		var maxCountry = countryData[maxIndex]
+		var minCountry = countryData[minIndex]
+		console.log("maxCountry: " + countrys[maxIndex] + " minCountry: " + countrys[minIndex]);
+		
+		var myData = [
+          {country: countryData[0], fee: feeData[0]},
+          {country: countryData[1], fee: feeData[1]},
+          {country: countryData[2], fee: feeData[2]},
+          {country: countryData[3], fee: feeData[3]},
+          {country: countryData[4], fee: feeData[4]},
+          {country: countryData[5], fee: feeData[5]},
+          {country: countryData[6], fee: feeData[6]},
+          {country: countryData[7], fee: feeData[7]},
+          {country: countryData[8], fee: feeData[8]},
+          {country: countryData[9], fee: feeData[9]}
+      	];
+    for (var i = 0; i < 10; i++) {
+      actualAvg += feeData[i]
+    }
+    actualAvg = actualAvg / 10
+    console.log("number:", number)
+    //create struct
+    var data = {
+      minfee: min,
+      maxfee: max,
+	  mincountry: minCountry,
+	  maxcountry: maxCountry,
+      actualAvg: actualAvg,
+      dataset: myData,
+      index: number
+      };
+    return data;
+    }
+//
+    //let data1 = generateDataset();
+    //console.log("mark1: " + data1.mark1 + " mark2: " + data1.mark2 + " dataset: " + data1.dataset);
+    
+    // Bar chart
+	  // https://www.d3-graph-gallery.com/graph/barplot_basic.html
+    
+    function createPie(data){
+
+        var actualAvg = data.actualAvg
+
+        var data = data.dataset,
+        minfee = data.minfee,
+        maxfee = data.maxfee;
+
+        var width = 960,
+            height = 500,
+            radius = Math.min(width, height) / 2;
+
+        //const colorGenerator = new ColorGenerator(10);
+        //console.log(colorGenerator);
+        //var color =
+        //    // d3.scaleSequential(function(t) {
+        //    //   return d3.hsl(t * 360, 1, 0.5) + "";
+        //    // });
+        //    // d3.scale.category20();
+//
+        //    d3.scale.ordinal()
+        //        .range(colorGenerator.generateHEX());
+        
+        // Compute the position of each group on the pie:
+
+        //var svg = d3.select("div#vis").append('svg')
+        //    .attr("width", width)
+        //    .attr("height", height)
+        //    .append("g")
+        //    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+//
+        //var pie = d3.pie()
+        //  .value(function(d) {return d.fee; })
+        //  
+        //var data_ready = pie(d3.entries(data))
+//
+        //// shape helper to build arcs:
+        //var arcGenerator = d3.arc()
+        //  .innerRadius(0)
+        //  .outerRadius(radius - 10)
+        //
+        //// Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
+        //svg
+        //  .selectAll('mySlices')
+        //  .data(data_ready)
+        //  .enter()
+        //  .append('path')
+        //    .attr('d', arcGenerator)
+        //    .attr('fill', "none")
+        //    .attr("stroke", "black")
+        //    .style("stroke-width", "2px")
+        //    .style("opacity", 0.7)
+//
+        //// Now add the annotation. Use the centroid method to get the best coordinates
+        //svg
+        //  .selectAll('mySlices')
+        //  .data(data_ready)
+        //  .enter()
+        //  .append('text')
+        //  .text(function (d) { return d.data.country; })
+        //  .attr("transform", function(d) { return "translate(" + arcGenerator.centroid(d) + ")";  })
+        //  .style("text-anchor", "middle")
+        //  .style("font-size", 17)
+        var arc = d3.arc()
+    .outerRadius(radius - 10)
+    .innerRadius(0);
+
+var labelArc = d3.arc()
+    .outerRadius(radius - 40)
+    .innerRadius(radius - 40);
+
+var pie = d3.pie()
+    .sort(null)
+    .value(function (d) { return d.fee; });
+
+var svg = d3.select("div#vis").append('svg')
+    .attr("width", width)
+    .attr("height", height)
+    .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+var g = svg.selectAll(".arc")
+    .data(pie(data))
+    .enter().append("g")
+    .attr("class", "arc");
+g.append("path")
+    .attr("d", arc)
+    .style("fill", 'none')
+    .style("stroke", "black")
+g.append("text")
+    .style("font", "15px times")
+    .style("text-anchor", "middle")
+    .style("fill", "gray")
+    .attr("transform", function (d) { return "translate(" + labelArc.centroid(d) + ")"; })
+    .attr("dy", ".35em")
+    .text(function (d) { return d.data.country; });
+
+function type(d) {
+    d.fee = +d.fee;
+    return d;
+}
+}
+</script>
+</html>

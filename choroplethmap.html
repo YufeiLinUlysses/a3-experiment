@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CS573 Data Visualization - A3 Experiment - Bar Chart</title>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+    
+</head>
+
+<body>
+  <div class="div header">
+    <h2>CS573 Data Visualization</h2>
+  </div>
+  <div class="div" id="experiment">
+      <p id="question-text">Can you guess what is the average subscription fee per month?</p>
+      <p>Can you guess what is the average subscription fee per month?</p>
+      <p>The minimum and maximum subscription fee are marked, input a number as your guess.</p>
+      <div class="vis" id="vis"></div>
+  </div>
+</body>
+
+<script>
+  console.log(d3); // test if d3 is loaded
+
+	// load data
+	var countrys = new Array()
+	var fees = new Array()
+	let average = ""  
+	
+  d3.csv("https://raw.githubusercontent.com/YufeiLinUlysses/a3-experiment/main/netflix_code.csv",function(error,csvdata){ 
+	
+    if(error){ 
+      console.log(error); 
+     } 
+     console.log(csvdata); 
+    
+    // get the useful data
+    
+    for( var i=0; i<csvdata.length; i++ ){ 
+      // country
+      var country = csvdata[i].Country; 
+      countrys[i] = country
+      // fee per month
+         var fee = csvdata[i]["Cost Per Month - Standard ($)"]; 
+      fees[i] = fee
+      
+         console.log( "Country: " + countrys[i] + "\n" + 
+             "Fee: " + fees[i] ); 
+      } 
+    console.log( "length: " + countrys.length );
+
+    data = getData()
+    createChoroplethMap(data)
+    //console.log("data3:", data)
+
+    
+    document.getElementById('question-text').innerHTML = "The maximum fee: " + data.maxcountry + " - " + data.maxfee + " $. " + "The minimum fee: " + data.mincountry + " - " + data.minfee + " $."
+  
+
+});
+
+    function getData() {
+      	
+		var actualAvg = null
+		// randomly choose 10 data
+    let count = 10
+		let length = countrys.length
+
+		var number = new Array()
+		var countryData = new Array()
+		var feeData = new Array()
+		let average = ""
+
+		var number = [];
+        for(var i=0;i<10;i++){
+            getx(number);
+        }
+
+        function getx(number){
+            for(var i=0;i>-1;i++){
+                var flag = true;
+                var num = Math.floor(Math.random()*length);
+                for(var i in number){
+                    if(number[i] == num){
+                        flag= false;
+                        break;
+                    }
+                }
+                if(flag == true){
+                    console.log(num);
+                    number.push(num);
+                    return;
+                }
+            }
+        }
+
+		for (var i=0; i<number.length; i++){
+			countryData[i] = countrys[number[i]]
+			//console.log("countryData[i]: " + countryData[i]);
+			feeData[i] = Number(fees[number[i]])
+		}
+
+		// min and max
+		var max = Math.max.apply(null, feeData);
+		var min = Math.min.apply(null, feeData);
+		
+		//console.log("typeof(max): " + typeof(max)+ " typeof(feeDate): " + typeof(feeData[3]));
+
+		Array.prototype.getArrayIndex = function(obj){
+        	for(var i=0;i<this.length;i++){
+				if(this[i]===obj){
+					return i;
+        	  	}
+        	}
+        	return -1;
+        }
+
+		var maxIndex = feeData.getArrayIndex(max)
+		var minIndex = feeData.getArrayIndex(min)
+
+		
+		//
+		console.log("max: " + max + " min: " + min);
+	    console.log("maxIndex: " + maxIndex + " minIndex: " + minIndex);
+		console.log("maxbyid: " + feeData[maxIndex] + " minbyid: " + feeData[minIndex]);
+
+		var maxCountry = countryData[maxIndex]
+		var minCountry = countryData[minIndex]
+		console.log("maxCountry: " + countrys[maxIndex] + " minCountry: " + countrys[minIndex]);
+		
+		var myData = [
+          {country: countryData[0], fee: feeData[0]},
+          {country: countryData[1], fee: feeData[1]},
+          {country: countryData[2], fee: feeData[2]},
+          {country: countryData[3], fee: feeData[3]},
+          {country: countryData[4], fee: feeData[4]},
+          {country: countryData[5], fee: feeData[5]},
+          {country: countryData[6], fee: feeData[6]},
+          {country: countryData[7], fee: feeData[7]},
+          {country: countryData[8], fee: feeData[8]},
+          {country: countryData[9], fee: feeData[9]}
+      	];
+    for (var i = 0; i < 10; i++) {
+      actualAvg += feeData[i]
+    }
+    actualAvg = actualAvg / 10
+    console.log("number:", number)
+    //create struct
+    var data = {
+      minfee: min,
+      maxfee: max,
+	  mincountry: minCountry,
+	  maxcountry: maxCountry,
+      actualAvg: actualAvg,
+      dataset: myData,
+      index: number
+      };
+    return data;
+    }
+//
+    //let data1 = generateDataset();
+    //console.log("mark1: " + data1.mark1 + " mark2: " + data1.mark2 + " dataset: " + data1.dataset);
+    
+    // Bar chart
+	  // https://www.d3-graph-gallery.com/graph/barplot_basic.html
+    
+    function createChoroplethMap(data){
+
+        var actualAvg = data.actualAvg
+    
+        var selectedRow = data.index
+        console.log("selectedRow:", selectedRow)
+    
+
+    // The svg
+    var svg = d3.select("div#vis").append('svg')
+	    //.attr("preserveAspectRatio", "xMidYMid meet")
+      //.attr("viewBox", "0 0 400 400")
+      .attr("width", 1000)
+      .attr("height", 600)
+    width = 1000
+    height = 600
+    // Map and projection
+    var path = d3.geoPath();
+    var projection = d3.geoMercator()
+        .scale(140)
+        .center([0, 40])
+        .translate([width / 2, height / 2]);
+
+    // Data and color scale
+    var datamap = d3.map();
+    console.log("d3.map",datamap);
+    console.log("d3.map",typeof(datamap));
+
+
+    var maxVal = 0
+    var minVal = 10000
+    var vals = []
+    // Load external data and boot
+    d3.queue()
+        .defer(d3.json, "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
+        .defer(d3.csv, "https://raw.githubusercontent.com/YufeiLinUlysses/a3-experiment/main/netflix_code.csv",
+            function (d, i) {
+                console.log("i",i);
+                if (selectedRow.includes(i)) {
+                    tmp = d["Cost Per Month - Standard ($)"]
+                    console.log(tmp)
+                    vals.push(Number(tmp))
+                    datamap.set(d.code, tmp);
+                    console.log("d.code",d.code);
+                    console.log("data",datamap);
+
+                }
+            })
+        .await(ready);
+
+
+    function ready(error, topo) {
+        console.log(topo)
+
+        console.log(vals)
+        console.log(data)
+        maxVal = Math.max.apply(null, vals);
+        minVal = Math.min.apply(null, vals);
+        for (var i = 0; i < 10; i++) {
+            actualAvg += vals[i]
+        }
+        actualAvg = actualAvg / 10
+        var maxColor = maxVal + 10
+        var interval = maxColor / 6
+        var colorScale = d3.scaleThreshold()
+            .domain([interval, interval * 2, interval * 3, interval * 4, interval * 5, maxColor])
+            .range(d3.schemeBlues[7]);
+        
+        // Draw the map
+        svg.append("g")
+            .selectAll("path")
+            .data(topo.features)
+            .enter()
+            .append("path")
+            // draw each country
+            .attr("d", d3.geoPath()
+                .projection(projection)
+            )
+            // set the color of each country
+            .attr("fill", function (d) {
+                d.total = datamap.get(d.id) || 0;
+                return colorScale(d.total);
+            });
+    }
+}
+
+</script>
+</html>
